@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>置業指南｜按揭計算與置業資訊</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">置業指南</a>
+      <nav>
+        <ul>
+          <li><a href="index.html" class="active">首頁</a></li>
+          <li><a href="#calculator">按揭計算</a></li>
+          <li><a href="#blog">文章</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>輕鬆規劃你的置業之路</h1>
+        <p>使用按揭計算器估算每月供款，並閱讀實用置業文章，助你做出明智決定。</p>
+      </div>
+    </section>
+
+    <section id="calculator">
+      <div class="container">
+        <h2 class="section-title">按揭計算器</h2>
+        <div class="calculator-grid">
+          <div class="calculator-card">
+            <form id="form">
+              <div class="field">
+                <label for="price">樓價（港元）</label>
+                <input type="number" id="price" value="5000000" min="0" step="100000" required>
+              </div>
+              <div class="field">
+                <label for="down">首期（港元）</label>
+                <input type="number" id="down" value="1000000" min="0" step="100000" required>
+              </div>
+              <div class="field">
+                <label for="rate">年利率（%）</label>
+                <input type="number" id="rate" value="4.125" min="0" max="30" step="0.01" required>
+              </div>
+              <div class="field">
+                <label for="years">還款年期（年）</label>
+                <input type="number" id="years" value="30" min="1" max="50" step="1" required>
+              </div>
+            </form>
+          </div>
+
+          <div class="calculator-card">
+            <div class="result" aria-live="polite">
+              <p class="result-label">估計每月供款</p>
+              <p class="result-value" id="monthly">$0</p>
+              <div class="breakdown">
+                <div class="breakdown-item">
+                  <span>貸款額</span>
+                  <strong id="loan">$0</strong>
+                </div>
+                <div class="breakdown-item">
+                  <span>總利息</span>
+                  <strong id="interest">$0</strong>
+                </div>
+                <div class="breakdown-item">
+                  <span>總還款額</span>
+                  <strong id="total">$0</strong>
+                </div>
+                <div class="breakdown-item">
+                  <span>預計清還日期</span>
+                  <strong id="payoff">—</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="blog">
+      <div class="container">
+        <h2 class="section-title">最新文章</h2>
+        <div class="blog-grid">
+          <article class="blog-card">
+            <a href="blog-1.html">
+              <div class="blog-card-image">🏠</div>
+              <div class="blog-card-body">
+                <p class="blog-card-meta">2026年3月10日 · 置業指南</p>
+                <h3>首次置業者必讀：按揭申請完全指南</h3>
+                <p>從評估借貸能力到準備文件，一文了解首次申請按揭的完整流程與注意事項。</p>
+                <span class="read-more">閱讀全文 →</span>
+              </div>
+            </a>
+          </article>
+
+          <article class="blog-card">
+            <a href="blog-2.html">
+              <div class="blog-card-image">📊</div>
+              <div class="blog-card-body">
+                <p class="blog-card-meta">2026年3月5日 · 按揭知識</p>
+                <h3>定息 vs 浮息：哪種按揭計劃更適合你？</h3>
+                <p>比較固定利率與浮動利率按揭的優缺點，助你根據財務狀況選擇最合適的方案。</p>
+                <span class="read-more">閱讀全文 →</span>
+              </div>
+            </a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 置業指南 · 僅供參考，不構成財務建議</p>
+    </div>
+  </footer>
+
+  <script>
+    const form = document.getElementById('form');
+    const monthlyEl = document.getElementById('monthly');
+    const loanEl = document.getElementById('loan');
+    const interestEl = document.getElementById('interest');
+    const totalEl = document.getElementById('total');
+    const payoffEl = document.getElementById('payoff');
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('zh-Hant-HK', {
+        style: 'currency',
+        currency: 'HKD',
+        maximumFractionDigits: 0,
+      }).format(value);
+    }
+
+    function calculate() {
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const down = parseFloat(document.getElementById('down').value) || 0;
+      const annualRate = parseFloat(document.getElementById('rate').value) || 0;
+      const years = parseInt(document.getElementById('years').value, 10) || 0;
+
+      const principal = Math.max(price - down, 0);
+      const months = years * 12;
+      const monthlyRate = annualRate / 100 / 12;
+
+      let payment = 0;
+      if (principal > 0 && months > 0) {
+        if (monthlyRate === 0) {
+          payment = principal / months;
+        } else {
+          payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) /
+            (Math.pow(1 + monthlyRate, months) - 1);
+        }
+      }
+
+      const totalPaid = payment * months;
+      const totalInterest = totalPaid - principal;
+
+      const payoff = new Date();
+      payoff.setMonth(payoff.getMonth() + months);
+
+      monthlyEl.textContent = formatCurrency(payment);
+      loanEl.textContent = formatCurrency(principal);
+      interestEl.textContent = formatCurrency(totalInterest);
+      totalEl.textContent = formatCurrency(totalPaid);
+      payoffEl.textContent = payoff.toLocaleDateString('zh-Hant', {
+        year: 'numeric',
+        month: 'long',
+      });
+    }
+
+    form.addEventListener('input', calculate);
+    calculate();
+  </script>
+</body>
+</html>
