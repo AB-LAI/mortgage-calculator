@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mortgage Calculator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f4f6f8;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .calculator {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      max-width: 420px;
+      width: 100%;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .field {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.375rem;
+      color: #444;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      outline: 2px solid #2563eb;
+      outline-offset: 1px;
+      border-color: #2563eb;
+    }
+
+    .result {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      background: #eff6ff;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .result-label {
+      font-size: 0.875rem;
+      color: #555;
+      margin-bottom: 0.25rem;
+    }
+
+    .result-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2563eb;
+    }
+
+    .breakdown {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #dbeafe;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      text-align: left;
+    }
+
+    .breakdown-item span {
+      display: block;
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .breakdown-item strong {
+      font-size: 0.9375rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator">
+    <h1>Mortgage Calculator</h1>
+
+    <form id="form">
+      <div class="field">
+        <label for="price">Home price ($)</label>
+        <input type="number" id="price" value="350000" min="0" step="1000" required>
+      </div>
+
+      <div class="field">
+        <label for="down">Down payment ($)</label>
+        <input type="number" id="down" value="70000" min="0" step="1000" required>
+      </div>
+
+      <div class="field">
+        <label for="rate">Interest rate (%)</label>
+        <input type="number" id="rate" value="6.5" min="0" max="30" step="0.01" required>
+      </div>
+
+      <div class="field">
+        <label for="years">Loan term (years)</label>
+        <input type="number" id="years" value="30" min="1" max="50" step="1" required>
+      </div>
+    </form>
+
+    <section class="result" aria-live="polite">
+      <p class="result-label">Estimated monthly payment</p>
+      <p class="result-value" id="monthly">$0</p>
+      <div class="breakdown">
+        <div class="breakdown-item">
+          <span>Loan amount</span>
+          <strong id="loan">$0</strong>
+        </div>
+        <div class="breakdown-item">
+          <span>Total interest</span>
+          <strong id="interest">$0</strong>
+        </div>
+        <div class="breakdown-item">
+          <span>Total paid</span>
+          <strong id="total">$0</strong>
+        </div>
+        <div class="breakdown-item">
+          <span>Payoff date</span>
+          <strong id="payoff">—</strong>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('form');
+    const monthlyEl = document.getElementById('monthly');
+    const loanEl = document.getElementById('loan');
+    const interestEl = document.getElementById('interest');
+    const totalEl = document.getElementById('total');
+    const payoffEl = document.getElementById('payoff');
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+      }).format(value);
+    }
+
+    function calculate() {
+      const price = parseFloat(document.getElementById('price').value) || 0;
+      const down = parseFloat(document.getElementById('down').value) || 0;
+      const annualRate = parseFloat(document.getElementById('rate').value) || 0;
+      const years = parseInt(document.getElementById('years').value, 10) || 0;
+
+      const principal = Math.max(price - down, 0);
+      const months = years * 12;
+      const monthlyRate = annualRate / 100 / 12;
+
+      let payment = 0;
+      if (principal > 0 && months > 0) {
+        if (monthlyRate === 0) {
+          payment = principal / months;
+        } else {
+          payment = principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) /
+            (Math.pow(1 + monthlyRate, months) - 1);
+        }
+      }
+
+      const totalPaid = payment * months;
+      const totalInterest = totalPaid - principal;
+
+      const payoff = new Date();
+      payoff.setMonth(payoff.getMonth() + months);
+
+      monthlyEl.textContent = formatCurrency(payment);
+      loanEl.textContent = formatCurrency(principal);
+      interestEl.textContent = formatCurrency(totalInterest);
+      totalEl.textContent = formatCurrency(totalPaid);
+      payoffEl.textContent = payoff.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+
+    form.addEventListener('input', calculate);
+    calculate();
+  </script>
+</body>
+</html>
